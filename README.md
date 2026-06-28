@@ -5,7 +5,7 @@
 <h1 align="center">Search Everywhere</h1>
 
 <p align="center">
-  One popup to find <b>files</b>, <b>symbols</b>, and <b>text</b> across your workspace —<br/>
+  One popup to find <b>files</b>, <b>symbols</b>, and <b>text</b> across your workspace -<br/>
   one search box instead of three.
 </p>
 
@@ -13,7 +13,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
 </p>
 
-Stop juggling **Go to File** (`Ctrl+P`), **Go to Symbol** (`Ctrl+T`), and **Find in Files** (`Ctrl+Shift+F`). Search Everywhere unifies all three into a single, fast, fuzzy-ranked popup — type a few characters and jump straight to whatever you meant.
+Stop juggling **Go to File** (`Ctrl+P`), **Go to Symbol** (`Ctrl+T`), and **Find in Files** (`Ctrl+Shift+F`). Search Everywhere unifies all three into a single, fast, fuzzy-ranked popup - type a few characters and jump straight to whatever you meant.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/truethari/search-everywhere/master/images/demo.gif" alt="Search Everywhere demo" width="800" />
@@ -23,16 +23,16 @@ Stop juggling **Go to File** (`Ctrl+P`), **Go to Symbol** (`Ctrl+T`), and **Find
 
 ## Features
 
-- **Unified search** — files, workspace symbols, and full-text matches in one list, grouped into clearly labeled sections.
-- **Fuzzy matching** — `sft` finds `searchFileText.ts`, `gqp` finds `getQuickPick`. Matched characters are highlighted as you type.
-- **Smart ranking** — word-boundary, camelHump, and consecutive-character matches rank highest; recently opened files get a boost.
-- **Real file icons** — results use your active File Icon Theme, so `.ts`, `.json`, `.md`, and friends look like they do in the Explorer.
-- **Filter tabs** — scope instantly to `All`, `Files`, `Symbols`, or `Text`.
-- **Power-user prefixes** — `@` for symbols, `#` for text, `:42` to jump to a line.
-- **Open to the side** — send any result to a split editor with one click.
-- **Recents on open** — an empty query shows the files you opened most recently.
-- **Resilient & fast** — debounced, cancellable searches; if one source fails, the others still deliver.
-- **Configurable** — tune result limits, debounce timing, excludes, and more.
+- **Unified search** - files, workspace symbols, and full-text matches in one list, grouped into clearly labeled sections.
+- **Fuzzy matching** - `sft` finds `searchFileText.ts`, `gqp` finds `getQuickPick`. Matched characters are highlighted as you type.
+- **Smart ranking** - word-boundary, camelHump, and consecutive-character matches rank highest; recently opened files get a boost.
+- **Real file icons** - results use your active File Icon Theme, so `.ts`, `.json`, `.md`, and friends look like they do in the Explorer.
+- **Filter tabs** - scope instantly to `All`, `Files`, `Symbols`, or `Text`.
+- **Power-user prefixes** - `@` for symbols, `#` for text, `:42` to jump to a line.
+- **Open to the side** - send any result to a split editor with one click.
+- **Recents on open** - an empty query shows the files you opened most recently.
+- **Resilient & fast** - debounced, cancellable searches; if one source fails, the others still deliver.
+- **Configurable** - tune result limits, debounce timing, excludes, and more.
 
 ---
 
@@ -73,7 +73,7 @@ The active tab is reflected in the popup title.
 
 ### Prefixes
 
-Prefixes are the fastest way to scope a single query — no clicking required:
+Prefixes are the fastest way to scope a single query - no clicking required:
 
 | Type           | Does                                      |
 | -------------- | ----------------------------------------- |
@@ -120,7 +120,7 @@ By default, `node_modules`, `.git`, `dist`, `out`, and `.next` are always exclud
 
 ## Performance
 
-- **No custom index.** Every source uses VS Code's own built-in providers — there's nothing to build or keep in sync.
+- **No custom index.** Every source uses VS Code's own built-in providers - there's nothing to build or keep in sync.
 - **Debounced & cancellable.** Files and symbols search after a short pause; the heavier full-text search waits a little longer. Each keystroke cancels in-flight work.
 - **Fault-isolated.** A failing source never blocks the others.
 - **Bounded.** Result counts and the file-scan ceiling are all capped (and configurable).
@@ -131,7 +131,7 @@ By default, `node_modules`, `.git`, `dist`, `out`, and `.next` are always exclud
 
 ## About double-press Shift
 
-A double-press of `Shift` is a familiar way to open a universal search. VS Code does **not** expose raw key events to extensions, and binding a bare `shift` key would intercept every capital letter and break typing — so double-Shift can't be enabled safely by default.
+A double-press of `Shift` is a familiar way to open a universal search. VS Code does **not** expose raw key events to extensions, and binding a bare `shift` key would intercept every capital letter and break typing - so double-Shift can't be enabled safely by default.
 
 The machinery ships and is ready: the extension registers an internal command `search-everywhere.shiftPressed` plus a 400 ms double-press detector. To opt in, add this to your `keybindings.json` (be aware it captures Shift in the editor):
 
@@ -176,9 +176,9 @@ To hack on it, open the folder in VS Code and press **`F5`** to launch an Extens
 
 ## Troubleshooting
 
-- **No symbol results?** Workspace symbols come from language extensions — make sure the relevant language support is installed and has finished indexing.
+- **No symbol results?** Workspace symbols come from language extensions - make sure the relevant language support is installed and has finished indexing.
 - **No text results?** Text search needs 3+ characters (configurable) and skips binary/huge files and your excludes.
-- **`Ctrl+T` does nothing?** It may collide with another binding — run the palette command to confirm the extension works, then rebind in Keyboard Shortcuts.
+- **`Ctrl+T` does nothing?** It may collide with another binding - run the palette command to confirm the extension works, then rebind in Keyboard Shortcuts.
 
 ---
 
