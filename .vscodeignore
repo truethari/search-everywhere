@@ -7,3 +7,5 @@ esbuild.js
 tsconfig.json
 **/*.map
 **/*.ts
+images/demo.gif
+images/512x512.png
