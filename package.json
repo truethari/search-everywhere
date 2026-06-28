@@ -1,0 +1,61 @@
+{
+  "name": "search-everywhere",
+  "displayName": "Search Everywhere",
+  "description": "JetBrains-style Search Everywhere for VS Code: files, symbols, and text in one ranked QuickPick (double-press Shift).",
+  "version": "0.1.0",
+  "publisher": "truethari",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/truethari/search-everywhere.git"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "search-everywhere.open",
+        "title": "Open",
+        "category": "Search Everywhere"
+      },
+      {
+        "command": "search-everywhere.shiftPressed",
+        "title": "Search Everywhere: Internal Shift Press",
+        "enablement": "false"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "search-everywhere.open",
+        "key": "ctrl+t",
+        "mac": "cmd+t",
+        "when": "!terminalFocus"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "compile": "node esbuild.js",
+    "watch": "node esbuild.js --watch",
+    "build": "node esbuild.js --production",
+    "package": "vsce package",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^18.19.0",
+    "typescript": "^5.4.0",
+    "esbuild": "^0.20.0",
+    "prettier": "^3.2.0",
+    "@vscode/vsce": "^2.24.0"
+  }
+}
