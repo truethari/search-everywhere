@@ -11,9 +11,9 @@ const DOUBLE_SHIFT_WINDOW_MS = 400;
  * Note on platform limits: VS Code does not expose raw key events to
  * extensions, and a bare-modifier keybinding (`"key": "shift"`) would intercept
  * every capital letter and break typing. So this detector is wired to an
- * internal command (`search-everywhere.shiftPressed`) that users may opt into
+ * internal command (`omnisearch.shiftPressed`) that users may opt into
  * binding to `shift`. The default, always-working triggers are the `Ctrl/Cmd+T`
- * keybinding and the `Search Everywhere: Open` command in the palette.
+ * keybinding and the `OmniSearch: Open` command in the palette.
  */
 class ShiftDetector {
   private lastPress = 0;
@@ -39,8 +39,8 @@ export function activate(context: vscode.ExtensionContext): void {
   const detector = new ShiftDetector(open);
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('search-everywhere.open', open),
-    vscode.commands.registerCommand('search-everywhere.shiftPressed', () =>
+    vscode.commands.registerCommand('omnisearch.open', open),
+    vscode.commands.registerCommand('omnisearch.shiftPressed', () =>
       detector.press()
     ),
     { dispose: () => ui.dispose() }

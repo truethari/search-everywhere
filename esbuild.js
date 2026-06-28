@@ -1,4 +1,4 @@
-// esbuild bundler for the Search Everywhere extension.
+// esbuild bundler for the OmniSearch extension.
 // Bundles src/extension.ts -> dist/extension.js as a CommonJS Node module,
 // keeping the `vscode` module external (provided by the host at runtime).
 const esbuild = require('esbuild');

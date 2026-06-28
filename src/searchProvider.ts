@@ -25,7 +25,7 @@ async function runSource(
   try {
     return await fn();
   } catch (err) {
-    console.error(`[search-everywhere] ${name} search failed:`, err);
+    console.error(`[omnisearch] ${name} search failed:`, err);
     return [];
   }
 }

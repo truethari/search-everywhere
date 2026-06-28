@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 // package.json) with sensible defaults, plus exclude-glob construction that can
 // honor the user's files.exclude / search.exclude.
 
-const SECTION = 'searchEverywhere';
+const SECTION = 'omnisearch';
 
 const DEFAULT_EXCLUDES = [
   '**/node_modules/**',

@@ -1,12 +1,12 @@
 {
-  "name": "search-everywhere",
-  "displayName": "Search Everywhere",
+  "name": "omnisearch",
+  "displayName": "OmniSearch",
   "description": "Find files, symbols, and full-text matches across your workspace from one fast, fuzzy-ranked popup — instead of three separate VS Code features.",
   "version": "1.0.0",
   "publisher": "truethari",
   "repository": {
     "type": "git",
-    "url": "https://github.com/truethari/search-everywhere.git"
+    "url": "https://github.com/truethari/OmniSearch.git"
   },
   "engines": {
     "vscode": "^1.85.0"
@@ -23,81 +23,81 @@
   "contributes": {
     "commands": [
       {
-        "command": "search-everywhere.open",
+        "command": "omnisearch.open",
         "title": "Open",
-        "category": "Search Everywhere"
+        "category": "OmniSearch"
       },
       {
-        "command": "search-everywhere.shiftPressed",
-        "title": "Search Everywhere: Internal Shift Press",
+        "command": "omnisearch.shiftPressed",
+        "title": "OmniSearch: Internal Shift Press",
         "enablement": "false"
       }
     ],
     "keybindings": [
       {
-        "command": "search-everywhere.open",
+        "command": "omnisearch.open",
         "key": "ctrl+t",
         "mac": "cmd+t",
         "when": "!terminalFocus"
       }
     ],
     "configuration": {
-      "title": "Search Everywhere",
+      "title": "OmniSearch",
       "properties": {
-        "searchEverywhere.maxFileResults": {
+        "omnisearch.maxFileResults": {
           "type": "number",
           "default": 30,
           "minimum": 1,
           "description": "Maximum number of file results to show."
         },
-        "searchEverywhere.maxSymbolResults": {
+        "omnisearch.maxSymbolResults": {
           "type": "number",
           "default": 30,
           "minimum": 1,
           "description": "Maximum number of symbol results to show."
         },
-        "searchEverywhere.maxTextResults": {
+        "omnisearch.maxTextResults": {
           "type": "number",
           "default": 20,
           "minimum": 1,
           "description": "Maximum number of text-match results to show."
         },
-        "searchEverywhere.textMinQueryLength": {
+        "omnisearch.textMinQueryLength": {
           "type": "number",
           "default": 3,
           "minimum": 1,
           "description": "Minimum query length before full-text search runs."
         },
-        "searchEverywhere.primaryDebounce": {
+        "omnisearch.primaryDebounce": {
           "type": "number",
           "default": 300,
           "minimum": 0,
           "description": "Debounce in ms for file and symbol search."
         },
-        "searchEverywhere.textDebounce": {
+        "omnisearch.textDebounce": {
           "type": "number",
           "default": 500,
           "minimum": 0,
           "description": "Debounce in ms for the slower full-text search."
         },
-        "searchEverywhere.recentFilesCount": {
+        "omnisearch.recentFilesCount": {
           "type": "number",
           "default": 10,
           "minimum": 0,
           "description": "How many recent files to show when the query is empty."
         },
-        "searchEverywhere.maxFileCandidates": {
+        "omnisearch.maxFileCandidates": {
           "type": "number",
           "default": 5000,
           "minimum": 100,
           "description": "Upper bound on files scanned for file and text search. Raise for large repos at the cost of speed."
         },
-        "searchEverywhere.respectEditorExcludes": {
+        "omnisearch.respectEditorExcludes": {
           "type": "boolean",
           "default": true,
           "description": "Also honor the editor's files.exclude and search.exclude settings when searching."
         },
-        "searchEverywhere.additionalExcludes": {
+        "omnisearch.additionalExcludes": {
           "type": "array",
           "items": {
             "type": "string"

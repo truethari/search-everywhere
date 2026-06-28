@@ -2,10 +2,10 @@ import * as vscode from 'vscode';
 
 /** How many recently-opened entries to remember. */
 const MAX_RECENT = 50;
-const STORAGE_KEY = 'searchEverywhere.recent';
+const STORAGE_KEY = 'omnisearch.recent';
 
 /**
- * Tracks files opened through Search Everywhere (most-recent-first), persisted
+ * Tracks files opened through OmniSearch (most-recent-first), persisted
  * per workspace. Used both to seed the empty-query view and to boost ranking.
  */
 export class RecencyStore {

@@ -1,6 +1,6 @@
 # Development Guide
 
-How to set up, run, test, and iterate on the **Search Everywhere** extension locally.
+How to set up, run, test, and iterate on the **OmniSearch** extension locally.
 
 ## Prerequisites
 
@@ -16,7 +16,7 @@ Optional, for packaging a `.vsix`:
 
 ```bash
 git clone <this-repo>            # or just open the existing folder
-cd search-everywhere
+cd OmniSearch
 npm install                      # installs devDependencies (no runtime deps)
 npm run compile                  # produces dist/extension.js
 ```
@@ -39,7 +39,7 @@ This is the main loop for testing the extension by hand.
    shows `No workspace folder open`.
 4. Trigger the feature:
    - Press **`Ctrl+T`** (`Cmd+T` on macOS), or
-   - Open the Command Palette (`Ctrl/Cmd+Shift+P`) → **`Search Everywhere: Open`**.
+   - Open the Command Palette (`Ctrl/Cmd+Shift+P`) → **`OmniSearch: Open`**.
 
 To reload the extension after a code change: in the Extension Development Host,
 run **`Developer: Reload Window`** (`Ctrl/Cmd+R`), or stop and re-press `F5`.
@@ -85,7 +85,7 @@ With the Extension Development Host open on a project that has source files:
   source via `outFiles` + sourcemaps (sourcemaps are on for the dev build, off
   for `--production`). Hitting `F5` attaches the debugger automatically.
 - **Logs:** the extension logs source failures with `console.error`
-  (`[search-everywhere] ...`). View them in the **main** VS Code window's
+  (`[omnisearch] ...`). View them in the **main** VS Code window's
   Debug Console (the one you pressed `F5` from), not the Host window.
 - **Inspect the running extension:** in the Host window,
   `Developer: Show Running Extensions` confirms it activated
@@ -146,8 +146,8 @@ Pick the file that matches the change:
 ### Installing the packaged build
 
 ```bash
-npm run package                       # creates search-everywhere-<version>.vsix
-code --install-extension search-everywhere-0.1.0.vsix
+npm run package                       # creates omnisearch-<version>.vsix
+code --install-extension omnisearch-1.0.0.vsix
 ```
 
 ## Troubleshooting

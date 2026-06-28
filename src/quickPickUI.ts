@@ -104,7 +104,7 @@ export class QuickPickUI {
 
   constructor(private readonly recency: RecencyStore) {}
 
-  /** Open the Search Everywhere QuickPick. */
+  /** Open the OmniSearch QuickPick. */
   open(): void {
     if (
       !vscode.workspace.workspaceFolders ||
@@ -145,7 +145,7 @@ export class QuickPickUI {
 
   private updateTitle(): void {
     if (this.quickPick) {
-      this.quickPick.title = `Search Everywhere — ${FILTER_LABELS[this.filter]}`;
+      this.quickPick.title = `OmniSearch — ${FILTER_LABELS[this.filter]}`;
     }
   }
 
@@ -369,9 +369,9 @@ export class QuickPickUI {
       }
     } catch (err) {
       vscode.window.showErrorMessage(
-        `Search Everywhere: could not open ${result.uri.fsPath}`
+        `OmniSearch: could not open ${result.uri.fsPath}`
       );
-      console.error('[search-everywhere] open failed:', err);
+      console.error('[omnisearch] open failed:', err);
     }
   }
 

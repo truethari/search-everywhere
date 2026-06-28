@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/truethari/search-everywhere/master/images/128x128.png" alt="Search Everywhere" width="120" />
+  <img src="https://raw.githubusercontent.com/truethari/OmniSearch/master/images/128x128.png" alt="OmniSearch" width="120" />
 </p>
 
-<h1 align="center">Search Everywhere</h1>
+<h1 align="center">OmniSearch</h1>
 
 <p align="center">
   One popup to find <b>files</b>, <b>symbols</b>, and <b>text</b> across your workspace -<br/>
@@ -13,10 +13,10 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
 </p>
 
-Stop juggling **Go to File** (`Ctrl+P`), **Go to Symbol** (`Ctrl+T`), and **Find in Files** (`Ctrl+Shift+F`). Search Everywhere unifies all three into a single, fast, fuzzy-ranked popup - type a few characters and jump straight to whatever you meant.
+Stop juggling **Go to File** (`Ctrl+P`), **Go to Symbol** (`Ctrl+T`), and **Find in Files** (`Ctrl+Shift+F`). OmniSearch unifies all three into a single, fast, fuzzy-ranked popup - type a few characters and jump straight to whatever you meant.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/truethari/search-everywhere/master/images/demo.gif" alt="Search Everywhere demo" width="800" />
+  <img src="https://raw.githubusercontent.com/truethari/OmniSearch/master/images/demo.gif" alt="OmniSearch demo" width="800" />
 </p>
 
 ---
@@ -38,9 +38,9 @@ Stop juggling **Go to File** (`Ctrl+P`), **Go to Symbol** (`Ctrl+T`), and **Find
 
 ## Getting started
 
-1. Install **Search Everywhere** from the Marketplace (or see [Manual install](#manual-install)).
+1. Install **OmniSearch** from the Marketplace (or see [Manual install](#manual-install)).
 2. Open a folder/workspace.
-3. Press **`Ctrl+T`** (**`Cmd+T`** on macOS), or run **`Search Everywhere: Open`** from the Command Palette.
+3. Press **`Ctrl+T`** (**`Cmd+T`** on macOS), or run **`OmniSearch: Open`** from the Command Palette.
 4. Start typing.
 
 > **Note:** the popup needs an open folder. With none, it shows _“No workspace folder open.”_
@@ -53,8 +53,8 @@ Stop juggling **Go to File** (`Ctrl+P`), **Go to Symbol** (`Ctrl+T`), and **Find
 
 | Action                      | Shortcut                                                      |
 | --------------------------- | ------------------------------------------------------------- |
-| Open Search Everywhere      | `Ctrl+T` / `Cmd+T`                                            |
-| Open via Command Palette    | `Search Everywhere: Open`                                     |
+| Open OmniSearch             | `Ctrl+T` / `Cmd+T`                                            |
+| Open via Command Palette    | `OmniSearch: Open`                                            |
 | Open selected result        | `Enter`                                                       |
 | **Open result to the side** | Click the split icon on the result, or the inline item button |
 
@@ -99,20 +99,20 @@ Symbols use kind-specific icons (class, method, variable, interface, enum, field
 
 ## Settings
 
-All settings live under the **`searchEverywhere.*`** namespace (Settings → search “Search Everywhere”).
+All settings live under the **`omnisearch.*`** namespace (Settings → search “OmniSearch”).
 
-| Setting                                  | Default | Description                                                               |
-| ---------------------------------------- | ------- | ------------------------------------------------------------------------- |
-| `searchEverywhere.maxFileResults`        | `30`    | Maximum number of file results to show.                                   |
-| `searchEverywhere.maxSymbolResults`      | `30`    | Maximum number of symbol results to show.                                 |
-| `searchEverywhere.maxTextResults`        | `20`    | Maximum number of text-match results to show.                             |
-| `searchEverywhere.textMinQueryLength`    | `3`     | Minimum query length before full-text search runs.                        |
-| `searchEverywhere.primaryDebounce`       | `300`   | Debounce (ms) for file and symbol search.                                 |
-| `searchEverywhere.textDebounce`          | `500`   | Debounce (ms) for the slower full-text search.                            |
-| `searchEverywhere.recentFilesCount`      | `10`    | Recent files to show when the query is empty.                             |
-| `searchEverywhere.maxFileCandidates`     | `5000`  | Upper bound on files scanned. Raise for large repos at the cost of speed. |
-| `searchEverywhere.respectEditorExcludes` | `true`  | Also honor `files.exclude` and `search.exclude` when searching.           |
-| `searchEverywhere.additionalExcludes`    | `[]`    | Extra glob patterns to exclude, e.g. `"**/*.min.js"`.                     |
+| Setting                            | Default | Description                                                               |
+| ---------------------------------- | ------- | ------------------------------------------------------------------------- |
+| `omnisearch.maxFileResults`        | `30`    | Maximum number of file results to show.                                   |
+| `omnisearch.maxSymbolResults`      | `30`    | Maximum number of symbol results to show.                                 |
+| `omnisearch.maxTextResults`        | `20`    | Maximum number of text-match results to show.                             |
+| `omnisearch.textMinQueryLength`    | `3`     | Minimum query length before full-text search runs.                        |
+| `omnisearch.primaryDebounce`       | `300`   | Debounce (ms) for file and symbol search.                                 |
+| `omnisearch.textDebounce`          | `500`   | Debounce (ms) for the slower full-text search.                            |
+| `omnisearch.recentFilesCount`      | `10`    | Recent files to show when the query is empty.                             |
+| `omnisearch.maxFileCandidates`     | `5000`  | Upper bound on files scanned. Raise for large repos at the cost of speed. |
+| `omnisearch.respectEditorExcludes` | `true`  | Also honor `files.exclude` and `search.exclude` when searching.           |
+| `omnisearch.additionalExcludes`    | `[]`    | Extra glob patterns to exclude, e.g. `"**/*.min.js"`.                     |
 
 By default, `node_modules`, `.git`, `dist`, `out`, and `.next` are always excluded.
 
@@ -133,12 +133,12 @@ By default, `node_modules`, `.git`, `dist`, `out`, and `.next` are always exclud
 
 A double-press of `Shift` is a familiar way to open a universal search. VS Code does **not** expose raw key events to extensions, and binding a bare `shift` key would intercept every capital letter and break typing - so double-Shift can't be enabled safely by default.
 
-The machinery ships and is ready: the extension registers an internal command `search-everywhere.shiftPressed` plus a 400 ms double-press detector. To opt in, add this to your `keybindings.json` (be aware it captures Shift in the editor):
+The machinery ships and is ready: the extension registers an internal command `omnisearch.shiftPressed` plus a 400 ms double-press detector. To opt in, add this to your `keybindings.json` (be aware it captures Shift in the editor):
 
 ```jsonc
 {
   "key": "shift",
-  "command": "search-everywhere.shiftPressed",
+  "command": "omnisearch.shiftPressed",
   "when": "editorTextFocus"
 }
 ```
@@ -149,7 +149,7 @@ Most users should stick with **`Ctrl/Cmd+T`**.
 
 ## Manual install
 
-Grab the `.vsix` from the [Releases](https://github.com/truethari/search-everywhere/releases) page (or build it yourself, below), then:
+Grab the `.vsix` from the [Releases](https://github.com/truethari/OmniSearch/releases) page (or build it yourself, below), then:
 
 ```bash
 code --install-extension search-everywhere-<version>.vsix
@@ -162,8 +162,8 @@ Or in VS Code: **Extensions** view → `…` menu → **Install from VSIX…**
 ## Build from source
 
 ```bash
-git clone https://github.com/truethari/search-everywhere.git
-cd search-everywhere
+git clone https://github.com/truethari/OmniSearch.git
+cd OmniSearch
 npm install
 npm run compile      # dev build
 npm run build        # minified production bundle
@@ -184,7 +184,7 @@ To hack on it, open the folder in VS Code and press **`F5`** to launch an Extens
 
 ## Contributing
 
-Issues and PRs are welcome at [github.com/truethari/search-everywhere](https://github.com/truethari/search-everywhere).
+Issues and PRs are welcome at [github.com/truethari/OmniSearch](https://github.com/truethari/OmniSearch).
 
 ## License
 
