@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/truethari/search-everywhere/main/images/128x128.png" alt="Search Everywhere" width="120" />
+  <img src="https://raw.githubusercontent.com/truethari/search-everywhere/master/images/128x128.png" alt="Search Everywhere" width="120" />
 </p>
 
 <h1 align="center">Search Everywhere</h1>
@@ -16,7 +16,7 @@
 Stop juggling **Go to File** (`Ctrl+P`), **Go to Symbol** (`Ctrl+T`), and **Find in Files** (`Ctrl+Shift+F`). Search Everywhere unifies all three into a single, fast, fuzzy-ranked popup — type a few characters and jump straight to whatever you meant.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/truethari/search-everywhere/main/images/demo.gif" alt="Search Everywhere demo" width="800" />
+  <img src="https://raw.githubusercontent.com/truethari/search-everywhere/master/images/demo.gif" alt="Search Everywhere demo" width="800" />
 </p>
 
 ---
