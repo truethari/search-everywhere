@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { QuickPickUI } from './quickPickUI';
+import { RecencyStore } from './recency';
 
 /** Max gap between two Shift presses to count as a double-press. */
 const DOUBLE_SHIFT_WINDOW_MS = 400;
@@ -31,7 +32,8 @@ class ShiftDetector {
 }
 
 export function activate(context: vscode.ExtensionContext): void {
-  const ui = new QuickPickUI();
+  const recency = new RecencyStore(context.workspaceState);
+  const ui = new QuickPickUI(recency);
 
   const open = () => ui.open();
   const detector = new ShiftDetector(open);

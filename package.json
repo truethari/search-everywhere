@@ -39,7 +39,73 @@
         "mac": "cmd+t",
         "when": "!terminalFocus"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Search Everywhere",
+      "properties": {
+        "searchEverywhere.maxFileResults": {
+          "type": "number",
+          "default": 30,
+          "minimum": 1,
+          "description": "Maximum number of file results to show."
+        },
+        "searchEverywhere.maxSymbolResults": {
+          "type": "number",
+          "default": 30,
+          "minimum": 1,
+          "description": "Maximum number of symbol results to show."
+        },
+        "searchEverywhere.maxTextResults": {
+          "type": "number",
+          "default": 20,
+          "minimum": 1,
+          "description": "Maximum number of text-match results to show."
+        },
+        "searchEverywhere.textMinQueryLength": {
+          "type": "number",
+          "default": 3,
+          "minimum": 1,
+          "description": "Minimum query length before full-text search runs."
+        },
+        "searchEverywhere.primaryDebounce": {
+          "type": "number",
+          "default": 300,
+          "minimum": 0,
+          "description": "Debounce in ms for file and symbol search."
+        },
+        "searchEverywhere.textDebounce": {
+          "type": "number",
+          "default": 500,
+          "minimum": 0,
+          "description": "Debounce in ms for the slower full-text search."
+        },
+        "searchEverywhere.recentFilesCount": {
+          "type": "number",
+          "default": 10,
+          "minimum": 0,
+          "description": "How many recent files to show when the query is empty."
+        },
+        "searchEverywhere.maxFileCandidates": {
+          "type": "number",
+          "default": 5000,
+          "minimum": 100,
+          "description": "Upper bound on files scanned for file and text search. Raise for large repos at the cost of speed."
+        },
+        "searchEverywhere.respectEditorExcludes": {
+          "type": "boolean",
+          "default": true,
+          "description": "Also honor the editor's files.exclude and search.exclude settings when searching."
+        },
+        "searchEverywhere.additionalExcludes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Extra glob patterns to exclude from all searches, e.g. \"**/*.min.js\"."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run build",

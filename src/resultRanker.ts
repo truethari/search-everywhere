@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import { fuzzyScore } from './fuzzyMatch';
+import { ResultLimits } from './config';
 
 /** The category a result belongs to. Drives ordering and the section separators. */
 export type ResultCategory = 'file' | 'symbol' | 'text';
@@ -12,7 +14,7 @@ export interface SearchResult {
   description: string;
   /** Secondary line: relative path + line number where applicable. */
   detail: string;
-  /** ThemeIcon id, e.g. 'file', 'symbol-class', 'search'. */
+  /** ThemeIcon id, e.g. 'symbol-class', 'search'. Ignored for file items. */
   iconId: string;
   /** Target document. */
   uri: vscode.Uri;
@@ -21,12 +23,6 @@ export interface SearchResult {
   /** Similarity score assigned by the ranker; higher is better. */
   score: number;
 }
-
-/** Scoring weights so the ordering intent is readable. */
-const SCORE_EXACT = 1000;
-const SCORE_PREFIX = 500;
-const SCORE_CONTAINS = 200;
-const SCORE_NONE = 0;
 
 /** Category ordering: files first, then symbols, then text. */
 const CATEGORY_ORDER: Record<ResultCategory, number> = {
@@ -42,56 +38,97 @@ export const CATEGORY_SEPARATORS: Record<ResultCategory, string> = {
   text: '— Text Matches —'
 };
 
-/**
- * Compute a string-similarity score of `label` against `query`.
- * exact match > starts-with > contains > none. Case-insensitive.
- */
-export function scoreMatch(label: string, query: string): number {
-  if (!query) {
-    return SCORE_NONE;
+/** Max contribution of recency to a result's score. */
+const RECENCY_WEIGHT = 12;
+
+export interface RankOptions {
+  limits: ResultLimits;
+  /** uri.toString() -> recency rank (0 = most recent). */
+  recent: Map<string, number>;
+  recentCount: number;
+}
+
+/** Recency contribution: most-recent gets the full weight, tapering to 0. */
+function recencyBonus(result: SearchResult, opts: RankOptions): number {
+  if (opts.recentCount === 0) {
+    return 0;
   }
-  const l = label.toLowerCase();
-  const q = query.toLowerCase();
-  if (l === q) {
-    return SCORE_EXACT;
+  const rank = opts.recent.get(result.uri.toString());
+  if (rank === undefined) {
+    return 0;
   }
-  if (l.startsWith(q)) {
-    return SCORE_PREFIX;
-  }
-  if (l.includes(q)) {
-    return SCORE_CONTAINS;
-  }
-  return SCORE_NONE;
+  return RECENCY_WEIGHT * (1 - rank / opts.recentCount);
 }
 
 /**
- * Assign a score to a result based on its label vs the query.
- * Shorter labels win ties (a small fractional bonus), so tighter matches float up.
+ * Score one result against the query. Files and symbols are fuzzy-matched on
+ * their name (and, for files, their path) and dropped when there is no match.
+ * Text matches already matched literally upstream, so they are kept as-is.
+ * Returns null when the result should be filtered out.
  */
-export function applyScore(result: SearchResult, query: string): SearchResult {
-  const base = scoreMatch(result.label, query);
-  const lengthBonus = result.label.length > 0 ? 1 / result.label.length : 0;
-  result.score = base + lengthBonus;
-  return result;
+function scoreResult(
+  result: SearchResult,
+  query: string,
+  opts: RankOptions
+): number | null {
+  let base: number;
+
+  if (result.category === 'text') {
+    base = 0;
+  } else {
+    const nameScore = fuzzyScore(query, result.label);
+    const pathScore = result.detail ? fuzzyScore(query, result.detail) : null;
+    if (nameScore === null && pathScore === null) {
+      return null;
+    }
+    // Prefer name matches; discount path-only matches.
+    base = Math.max(
+      nameScore ?? -Infinity,
+      pathScore === null ? -Infinity : pathScore * 0.6
+    );
+  }
+
+  return base + recencyBonus(result, opts);
 }
 
 /**
  * Merge results from all sources into one list ordered by category
- * (files, symbols, text) and, within each category, by descending score.
+ * (files, symbols, text), fuzzy-scored and capped per category.
  */
 export function rankAndMerge(
   groups: SearchResult[][],
-  query: string
+  query: string,
+  opts: RankOptions
 ): SearchResult[] {
-  const all = groups.flat().map((r) => applyScore(r, query));
+  const limitFor = (c: ResultCategory): number =>
+    c === 'file'
+      ? opts.limits.file
+      : c === 'symbol'
+        ? opts.limits.symbol
+        : opts.limits.text;
 
-  all.sort((a, b) => {
-    const catDiff = CATEGORY_ORDER[a.category] - CATEGORY_ORDER[b.category];
-    if (catDiff !== 0) {
-      return catDiff;
+  const out: SearchResult[] = [];
+
+  for (const group of groups) {
+    const scored: SearchResult[] = [];
+    for (const result of group) {
+      const score = scoreResult(result, query, opts);
+      if (score === null) {
+        continue;
+      }
+      result.score = score;
+      scored.push(result);
     }
-    return b.score - a.score;
+    scored.sort((a, b) => b.score - a.score);
+    const category = scored[0]?.category;
+    out.push(...(category ? scored.slice(0, limitFor(category)) : scored));
+  }
+
+  // Stable category ordering across groups.
+  out.sort((a, b) => {
+    const catDiff = CATEGORY_ORDER[a.category] - CATEGORY_ORDER[b.category];
+    return catDiff !== 0 ? catDiff : b.score - a.score;
   });
 
-  return all;
+  return out;
 }

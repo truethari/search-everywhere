@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { SearchResult } from './resultRanker';
 
-/** Max symbol results returned. */
-const SYMBOL_LIMIT = 30;
+/** Safety cap on raw symbols processed; the ranker caps the displayed count. */
+const SYMBOL_SAFETY_CAP = 200;
 
 /** Map a SymbolKind to a codicon id. */
 function iconForKind(kind: vscode.SymbolKind): string {
@@ -82,7 +82,7 @@ export async function searchSymbols(
   }
 
   const results: SearchResult[] = [];
-  for (const sym of symbols.slice(0, SYMBOL_LIMIT)) {
+  for (const sym of symbols.slice(0, SYMBOL_SAFETY_CAP)) {
     const uri = sym.location.uri;
     const start = sym.location.range.start;
     const rel = relativePath(uri);

@@ -1,24 +1,17 @@
 import * as vscode from 'vscode';
 import { SearchResult } from './resultRanker';
-
-/** Minimum query length before text search runs (it is the most expensive). */
-export const TEXT_MIN_QUERY = 3;
-
-/** Max text-match results returned. */
-const TEXT_LIMIT = 20;
-
-/** Cap on how many files we actually read while scanning. */
-const MAX_FILES_SCANNED = 2000;
+import {
+  buildExcludeGlob,
+  getFileCandidateCap,
+  getLimits,
+  getTextMinQuery
+} from './config';
 
 /** Cap on matches taken from a single file, so one file can't flood results. */
 const MAX_PER_FILE = 5;
 
 /** Skip files larger than this (bytes) — likely generated or binary. */
 const MAX_FILE_SIZE = 1_000_000;
-
-/** Globs excluded from the scan (mirror the file-search excludes). */
-const EXCLUDE_GLOB =
-  '{**/node_modules/**,**/.git/**,**/dist/**,**/out/**,**/.next/**}';
 
 const decoder = new TextDecoder('utf-8', { fatal: false });
 
@@ -38,14 +31,15 @@ export async function searchText(
   query: string,
   token: vscode.CancellationToken
 ): Promise<SearchResult[]> {
-  if (query.length < TEXT_MIN_QUERY) {
+  if (query.length < getTextMinQuery()) {
     return [];
   }
 
+  const textLimit = getLimits().text;
   const uris = await vscode.workspace.findFiles(
     '**/*',
-    EXCLUDE_GLOB,
-    MAX_FILES_SCANNED,
+    buildExcludeGlob(),
+    getFileCandidateCap(),
     token
   );
   if (token.isCancellationRequested) {
@@ -56,7 +50,7 @@ export async function searchText(
   const results: SearchResult[] = [];
 
   for (const uri of uris) {
-    if (token.isCancellationRequested || results.length >= TEXT_LIMIT) {
+    if (token.isCancellationRequested || results.length >= textLimit) {
       break;
     }
 
@@ -77,7 +71,7 @@ export async function searchText(
     let perFile = 0;
 
     for (let i = 0; i < lines.length; i++) {
-      if (results.length >= TEXT_LIMIT || perFile >= MAX_PER_FILE) {
+      if (results.length >= textLimit || perFile >= MAX_PER_FILE) {
         break;
       }
       const line = lines[i];

@@ -1,14 +1,11 @@
 import * as vscode from 'vscode';
 import { SearchResult } from './resultRanker';
+import { isSubsequence } from './fuzzyMatch';
+import { buildExcludeGlob, getFileCandidateCap } from './config';
 
-/** Globs excluded from file search. */
-const EXCLUDE_GLOB =
-  '{**/node_modules/**,**/.git/**,**/dist/**,**/out/**,**/.next/**}';
+/** Upper bound on file results handed to the ranker (which caps further). */
+const FILE_CANDIDATE_RESULTS = 300;
 
-/** Max file results returned. */
-const FILE_LIMIT = 30;
-
-/** Build a relative, forward-slashed path for display. */
 function relativePath(uri: vscode.Uri): string {
   return vscode.workspace.asRelativePath(uri, false).replace(/\\/g, '/');
 }
@@ -18,10 +15,24 @@ function basename(path: string): string {
   return idx >= 0 ? path.slice(idx + 1) : path;
 }
 
+/** Build a file SearchResult; icon is rendered from the real file type by the UI. */
+export function makeFileResult(uri: vscode.Uri, recent = false): SearchResult {
+  const rel = relativePath(uri);
+  return {
+    category: 'file',
+    label: basename(rel),
+    description: recent ? '$(history) Recent' : '$(file) File',
+    detail: rel,
+    iconId: 'file',
+    uri,
+    score: 0
+  };
+}
+
 /**
- * Find files whose name or relative path matches the query.
- * Uses workspace.findFiles with a fuzzy substring glob; final filtering and
- * scoring against the filename happen in the caller's ranker.
+ * Find files whose name or relative path fuzzily matches the query. Fetches a
+ * broad candidate set and filters by subsequence so queries like `sft` match
+ * `searchFileText.ts`; final scoring/cap happens in the ranker.
  */
 export async function searchFiles(
   query: string,
@@ -31,103 +42,74 @@ export async function searchFiles(
     return [];
   }
 
-  // A permissive glob: match the query anywhere in the path, case-insensitively
-  // by letting findFiles do the heavy lifting and refining below.
-  const includeGlob = `**/*${query}*`;
   const uris = await vscode.workspace.findFiles(
-    includeGlob,
-    EXCLUDE_GLOB,
-    FILE_LIMIT * 3,
+    '**/*',
+    buildExcludeGlob(),
+    getFileCandidateCap(),
     token
   );
-
   if (token.isCancellationRequested) {
     return [];
   }
 
-  const q = query.toLowerCase();
   const results: SearchResult[] = [];
-
   for (const uri of uris) {
+    if (results.length >= FILE_CANDIDATE_RESULTS) {
+      break;
+    }
     const rel = relativePath(uri);
     const name = basename(rel);
-    // Keep matches against either the filename or the full relative path.
-    if (!name.toLowerCase().includes(q) && !rel.toLowerCase().includes(q)) {
-      continue;
+    if (isSubsequence(query, name) || isSubsequence(query, rel)) {
+      results.push(makeFileResult(uri));
     }
-    results.push({
-      category: 'file',
-      label: name,
-      description: '$(file) File',
-      detail: rel,
-      iconId: 'file',
-      uri,
-      score: 0
-    });
   }
-
-  return results.slice(0, FILE_LIMIT);
+  return results;
 }
 
 /**
- * Return up to `limit` files for the empty-query case (recently opened, with a
- * plain file listing as fallback).
+ * Files shown for an empty query: the extension's own recently-opened files
+ * first (still on disk), then filled out with a plain workspace listing.
  */
 export async function listFallbackFiles(
+  recent: string[],
   limit: number,
   token: vscode.CancellationToken
 ): Promise<SearchResult[]> {
-  // Try the recently-opened list first.
-  try {
-    const recent: any = await vscode.commands.executeCommand(
-      'vscode.getRecentlyOpenedInWorkspace'
-    );
-    const entries: any[] = recent?.workspaces ?? recent?.files ?? [];
-    const fromRecent: SearchResult[] = [];
-    for (const entry of entries) {
-      const uri: vscode.Uri | undefined =
-        entry?.folderUri ?? entry?.fileUri ?? entry?.uri;
-      if (!uri) {
-        continue;
-      }
-      const rel = relativePath(uri);
-      fromRecent.push({
-        category: 'file',
-        label: basename(rel),
-        description: '$(history) Recent',
-        detail: rel,
-        iconId: 'history',
-        uri,
-        score: 0
-      });
-      if (fromRecent.length >= limit) {
-        break;
-      }
+  const results: SearchResult[] = [];
+  const seen = new Set<string>();
+
+  for (const raw of recent) {
+    if (results.length >= limit) {
+      break;
     }
-    if (fromRecent.length > 0) {
-      return fromRecent;
+    let uri: vscode.Uri;
+    try {
+      uri = vscode.Uri.parse(raw);
+      await vscode.workspace.fs.stat(uri); // skip entries that no longer exist
+    } catch {
+      continue;
     }
-  } catch {
-    // Command may be unavailable; fall through to a plain listing.
+    seen.add(uri.toString());
+    results.push(makeFileResult(uri, true));
   }
 
-  // Fallback: a plain file list from the workspace.
-  const uris = await vscode.workspace.findFiles(
-    '**/*',
-    EXCLUDE_GLOB,
-    limit,
-    token
-  );
-  return uris.map((uri) => {
-    const rel = relativePath(uri);
-    return {
-      category: 'file' as const,
-      label: basename(rel),
-      description: '$(file) File',
-      detail: rel,
-      iconId: 'file',
-      uri,
-      score: 0
-    };
-  });
+  if (results.length < limit && !token.isCancellationRequested) {
+    const uris = await vscode.workspace.findFiles(
+      '**/*',
+      buildExcludeGlob(),
+      limit * 3,
+      token
+    );
+    for (const uri of uris) {
+      if (results.length >= limit) {
+        break;
+      }
+      if (seen.has(uri.toString())) {
+        continue;
+      }
+      results.push(makeFileResult(uri));
+    }
+  }
+
+  return results;
 }

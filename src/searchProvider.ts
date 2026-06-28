@@ -3,12 +3,10 @@ import { SearchResult } from './resultRanker';
 import { searchFiles, listFallbackFiles } from './fileSearch';
 import { searchSymbols } from './symbolSearch';
 import { searchText } from './textSearch';
+import { getRecentCount } from './config';
 
 /** Which category scope the UI is currently filtered to. */
 export type SearchFilter = 'all' | 'files' | 'symbols' | 'text';
-
-/** Number of fallback files shown for an empty query. */
-const EMPTY_QUERY_FILE_COUNT = 10;
 
 /** Files + symbols results for one query (the "primary", faster sources). */
 export interface PrimaryResults {
@@ -58,9 +56,12 @@ export class SearchProvider {
   }
 
   /** Files shown when the query is empty (recently opened, then fallback). */
-  fallbackFiles(token: vscode.CancellationToken): Promise<SearchResult[]> {
+  fallbackFiles(
+    recent: string[],
+    token: vscode.CancellationToken
+  ): Promise<SearchResult[]> {
     return runSource('fallback', () =>
-      listFallbackFiles(EMPTY_QUERY_FILE_COUNT, token)
+      listFallbackFiles(recent, getRecentCount(), token)
     );
   }
 

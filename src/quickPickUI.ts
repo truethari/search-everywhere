@@ -6,13 +6,11 @@ import {
   CATEGORY_SEPARATORS,
   ResultCategory
 } from './resultRanker';
+import { getDebounce, getLimits } from './config';
+import { RecencyStore } from './recency';
 
-/** Debounce for the fast sources (files + symbols). */
-const DEBOUNCE_PRIMARY = 300;
-/** Debounce for the slower full-text search. */
-const DEBOUNCE_TEXT = 500;
-
-const PLACEHOLDER = 'Search files, symbols, and text...';
+const PLACEHOLDER =
+  'Search files, symbols, and text… (@ symbols, # text, :line)';
 
 /** A QuickPick item that may carry an underlying search result. */
 interface ResultItem extends vscode.QuickPickItem {
@@ -31,10 +29,39 @@ const FILTER_LABELS: Record<SearchFilter, string> = {
   text: 'Text'
 };
 
+/** Inline button shown on each result to open it in a split editor. */
+const OPEN_SIDE_BUTTON: vscode.QuickInputButton = {
+  iconPath: new vscode.ThemeIcon('split-horizontal'),
+  tooltip: 'Open to the Side'
+};
+
+/** Parsed query: either a goto-line directive or a scoped search term. */
+type ParsedQuery =
+  { line: number } | { scopeOverride?: SearchFilter; term: string };
+
+function parseQuery(raw: string): ParsedQuery {
+  const t = raw.trim();
+  const lineMatch = /^:(\d+)$/.exec(t);
+  if (lineMatch) {
+    return { line: parseInt(lineMatch[1], 10) };
+  }
+  if (t.startsWith('@')) {
+    return { scopeOverride: 'symbols', term: t.slice(1).trim() };
+  }
+  if (t.startsWith('#')) {
+    return { scopeOverride: 'text', term: t.slice(1).trim() };
+  }
+  return { term: t };
+}
+
+function relativePath(uri: vscode.Uri): string {
+  return vscode.workspace.asRelativePath(uri, false).replace(/\\/g, '/');
+}
+
 /**
- * Owns the QuickPick experience: filter tabs, debounced searching across the
- * three sources, busy state, rendering with category separators, and opening
- * the chosen result.
+ * Owns the QuickPick experience: filter tabs, query prefixes, debounced search
+ * across the three sources, busy state, ranked rendering with separators, and
+ * opening the chosen result (optionally to the side).
  */
 export class QuickPickUI {
   private readonly provider = new SearchProvider();
@@ -75,6 +102,8 @@ export class QuickPickUI {
     }
   ];
 
+  constructor(private readonly recency: RecencyStore) {}
+
   /** Open the Search Everywhere QuickPick. */
   open(): void {
     if (
@@ -104,6 +133,7 @@ export class QuickPickUI {
     qp.onDidTriggerButton((button) =>
       this.onTriggerButton(button as FilterButton)
     );
+    qp.onDidTriggerItemButton((e) => this.onTriggerItemButton(e));
     qp.onDidAccept(() => this.onAccept());
     qp.onDidHide(() => this.dispose());
 
@@ -130,7 +160,14 @@ export class QuickPickUI {
   }
 
   private onValueChange(rawValue: string): void {
-    const query = rawValue.trim();
+    const parsed = parseQuery(rawValue);
+    if ('line' in parsed) {
+      this.renderGotoLine(parsed.line);
+      return;
+    }
+
+    const query = parsed.term;
+    const scope: SearchFilter = parsed.scopeOverride ?? this.filter;
     this.currentQuery = query;
 
     this.clearTimers();
@@ -146,7 +183,7 @@ export class QuickPickUI {
       this.pendingPrimary = true;
       this.pendingText = false;
       this.updateBusy();
-      this.provider.fallbackFiles(token).then((files) => {
+      this.provider.fallbackFiles(this.recency.list(), token).then((files) => {
         if (token.isCancellationRequested) {
           return;
         }
@@ -158,12 +195,15 @@ export class QuickPickUI {
       return;
     }
 
+    const wantText = scope === 'all' || scope === 'text';
     this.pendingPrimary = true;
-    this.pendingText = this.filter === 'all' || this.filter === 'text';
+    this.pendingText = wantText;
     this.updateBusy();
 
+    const { primary, text } = getDebounce();
+
     this.primaryTimer = setTimeout(() => {
-      this.provider.primary(query, this.filter, token).then((res) => {
+      this.provider.primary(query, scope, token).then((res) => {
         if (token.isCancellationRequested) {
           return;
         }
@@ -173,11 +213,11 @@ export class QuickPickUI {
         this.render();
         this.updateBusy();
       });
-    }, DEBOUNCE_PRIMARY);
+    }, primary);
 
-    if (this.pendingText) {
+    if (wantText) {
       this.textTimer = setTimeout(() => {
-        this.provider.text(query, this.filter, token).then((res) => {
+        this.provider.text(query, scope, token).then((res) => {
           if (token.isCancellationRequested) {
             return;
           }
@@ -186,8 +226,52 @@ export class QuickPickUI {
           this.render();
           this.updateBusy();
         });
-      }, DEBOUNCE_TEXT);
+      }, text);
     }
+  }
+
+  /** Render a single "Go to line N" entry for the active editor. */
+  private renderGotoLine(line: number): void {
+    this.clearTimers();
+    this.provider.cancel();
+    this.pendingPrimary = false;
+    this.pendingText = false;
+    this.updateBusy();
+
+    if (!this.quickPick) {
+      return;
+    }
+
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      this.quickPick.items = [];
+      return;
+    }
+
+    const max = Math.max(editor.document.lineCount, 1);
+    const target = Math.min(Math.max(line, 1), max);
+    const uri = editor.document.uri;
+    const result: SearchResult = {
+      category: 'file',
+      label: `Go to line ${target}`,
+      description: '$(go-to-file) Line',
+      detail: `${relativePath(uri)}:${target}`,
+      iconId: 'go-to-file',
+      uri,
+      position: new vscode.Position(target - 1, 0),
+      score: 0
+    };
+
+    this.quickPick.items = [
+      {
+        label: result.label,
+        description: result.description,
+        detail: result.detail,
+        iconPath: new vscode.ThemeIcon(result.iconId),
+        alwaysShow: true,
+        result
+      }
+    ];
   }
 
   private render(): void {
@@ -195,9 +279,15 @@ export class QuickPickUI {
       return;
     }
 
+    const { map, count } = this.recency.ranks();
     const merged = rankAndMerge(
       [this.files, this.symbols, this.text],
-      this.currentQuery
+      this.currentQuery,
+      {
+        limits: getLimits(),
+        recent: map,
+        recentCount: count
+      }
     );
 
     const items: ResultItem[] = [];
@@ -211,13 +301,22 @@ export class QuickPickUI {
         });
         lastCategory = result.category;
       }
-      items.push({
+
+      const item: ResultItem = {
         label: result.label,
         description: result.description,
         detail: result.detail,
-        iconPath: new vscode.ThemeIcon(result.iconId),
+        alwaysShow: true,
+        buttons: [OPEN_SIDE_BUTTON],
         result
-      });
+      };
+      // Use the real file-type icon for files; codicon for symbols/text.
+      if (result.category === 'file') {
+        item.resourceUri = result.uri;
+      } else {
+        item.iconPath = new vscode.ThemeIcon(result.iconId);
+      }
+      items.push(item);
     }
 
     this.quickPick.items = items;
@@ -229,19 +328,38 @@ export class QuickPickUI {
     }
   }
 
-  private async onAccept(): Promise<void> {
-    const selected = this.quickPick?.selectedItems[0];
-    const result = selected?.result;
+  private onAccept(): void {
+    const result = this.quickPick?.selectedItems[0]?.result;
     if (!result) {
       return;
     }
-
-    // Close first so focus returns to the editor cleanly.
     this.quickPick?.hide();
+    void this.openResult(result, false);
+  }
 
+  private onTriggerItemButton(
+    e: vscode.QuickPickItemButtonEvent<ResultItem>
+  ): void {
+    const result = e.item.result;
+    if (!result) {
+      return;
+    }
+    this.quickPick?.hide();
+    void this.openResult(result, true);
+  }
+
+  /** Open a result, optionally in a split to the side, and reveal its position. */
+  private async openResult(
+    result: SearchResult,
+    toSide: boolean
+  ): Promise<void> {
+    this.recency.record(result.uri);
     try {
       const doc = await vscode.workspace.openTextDocument(result.uri);
-      const editor = await vscode.window.showTextDocument(doc);
+      const editor = await vscode.window.showTextDocument(doc, {
+        viewColumn: toSide ? vscode.ViewColumn.Beside : undefined,
+        preserveFocus: false
+      });
 
       if (result.position) {
         const pos = result.position;
